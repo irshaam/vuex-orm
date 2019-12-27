@@ -751,8 +751,8 @@ export default class Query<T extends Model = Model> {
   }
 
   /**
-   * Insert given data to the state. Unlike `create`, this method will not
-   * remove existing data within the state, but it will update the data
+   * Insert given data to the store. Unlike `create`, this method will not
+   * remove existing data within the store, but it will update the data
    * with the same primary key.
    */
   insert (data: Data.Record | Data.Record[], options: Options.PersistOptions): Data.Collections {
@@ -1004,7 +1004,7 @@ export default class Query<T extends Model = Model> {
   /**
    * Persist data into the state.
    */
-  persist (method: string, data: Data.Record | Data.Record[], options: Options.PersistOptions): Data.Collections {
+  persist (method: Options.PersistMethods, data: Data.Record | Data.Record[], options: Options.PersistOptions): Data.Collections {
     const normalizedData = this.normalize(data)
 
     if (Utils.isEmpty(normalizedData)) {
@@ -1033,7 +1033,7 @@ export default class Query<T extends Model = Model> {
   /**
    * Persist given records to the store by the given method.
    */
-  persistRecords (method: 'create' | 'insert' | 'update' | 'insertOrUpdate', records: Data.Records): Data.Collection<T> {
+  persistRecords (method: Options.PersistMethods, records: Data.Records): Data.Collection<T> {
     switch (method) {
       case 'create':
         return this.createRecords(records)
@@ -1049,7 +1049,7 @@ export default class Query<T extends Model = Model> {
   /**
    * Get persist method from given information.
    */
-  private getPersistMethod (entity: string, options: Options.PersistOptions, fallback: string): 'create' | 'insert' | 'update' | 'insertOrUpdate' {
+  private getPersistMethod (entity: string, options: Options.PersistOptions, fallback: Options.PersistMethods): Options.PersistMethods {
     if (options.create && options.create.includes(entity)) {
       return 'create'
     }
@@ -1066,7 +1066,7 @@ export default class Query<T extends Model = Model> {
       return 'insertOrUpdate'
     }
 
-    return fallback as 'create' | 'insert' | 'update' | 'insertOrUpdate'
+    return fallback
   }
 
   /**
