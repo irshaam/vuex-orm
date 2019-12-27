@@ -1,7 +1,9 @@
+import { Store } from 'vuex'
 import Item from '../data/Item'
 import Collection from '../data/Collection'
 import Collections from '../data/Collections'
 import Model from '../model/Model'
+import Query from '../query/Query'
 import ActionsContract from './contracts/RootActions'
 import ActionContext from './contracts/RootActionContext'
 import * as Payloads from './payloads/RootActions'
@@ -39,12 +41,8 @@ const RootActions: ActionsContract = {
   /**
    * Create new data with all fields filled by default values.
    */
-  new (context: ActionContext, payload: Payloads.New): Promise<Model> {
-    const result: Result = { data: {} }
-
-    context.commit('new', { ...payload, result })
-
-    return result.data
+  async new (this: Store<any>, _context: ActionContext, payload: Payloads.New): Promise<Model> {
+    return (new Query(this, payload.entity)).new()
   },
 
   /**

@@ -1,3 +1,4 @@
+import { Store } from 'vuex'
 import Utils from '../support/Utils'
 import Database, { Models } from '../database/Database'
 import * as Data from '../data'
@@ -31,9 +32,19 @@ export default class Query<T extends Model = Model> {
   static lastHookId: number = 0
 
   /**
+   * The store instance.
+   */
+  store: Store<any>
+
+  /**
    * The database instance.
    */
   database: Database
+
+  /**
+   * The entity name being queried.
+   */
+  entity: string
 
   /**
    * The root state of the Vuex Store.
@@ -44,11 +55,6 @@ export default class Query<T extends Model = Model> {
    * The entity state of the Vuex Store.
    */
   state: State
-
-  /**
-   * The entity name being queried.
-   */
-  entity: string
 
   /**
    * The model being queried.
@@ -126,8 +132,9 @@ export default class Query<T extends Model = Model> {
   /**
    * Create a new Query instance.
    */
-  constructor (database: Database, entity: string) {
-    this.database = database
+  constructor (store: Store<any>, entity: string) {
+    this.store = store
+    this.database = store.$db()
     this.entity = entity
     this.baseModel = this.getBaseModel(entity)
     this.model = this.getModel(entity)
@@ -139,12 +146,13 @@ export default class Query<T extends Model = Model> {
   /**
    * Delete all records from the store.
    */
-  static deleteAll (database: Database): void {
+  static deleteAll (store: Store<any>): void {
+    const database = store.$db()
     const models = database.models()
 
     for (const entity in models) {
       const state = database.getState()[entity]
-      state && (new this(database, entity)).deleteAll()
+      state && (new this(store, entity)).deleteAll()
     }
   }
 
@@ -196,7 +204,7 @@ export default class Query<T extends Model = Model> {
   newQuery (entity?: string): Query {
     entity = entity || this.entity
 
-    return (new Query(this.database, entity))
+    return (new Query(this.store, entity))
   }
 
   /**
@@ -716,12 +724,12 @@ export default class Query<T extends Model = Model> {
   /**
    * Create new data with all fields filled by default values.
    */
-  new (): Model {
-    const record = (new this.model()).$toJson()
+  new (): T {
+    const model = (new this.model()).$generateId() as T
 
-    const result = this.insert(record, {})
+    this.commitInsert(model.$getAttributes())
 
-    return result[this.entity][0]
+    return model
   }
 
   /**
@@ -1127,6 +1135,20 @@ export default class Query<T extends Model = Model> {
     })
 
     return deleted
+  }
+
+  /**
+   * Commit mutation.
+   */
+  private commit (name: string, payload: any): void {
+    this.store.commit(`${this.database.namespace}/${name}`, payload)
+  }
+
+  /**
+   * Commit insert mutation.
+   */
+  private commitInsert (data: Data.Record): void {
+    this.commit('insertRecord', { entity: this.entity, data })
   }
 
   /**

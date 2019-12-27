@@ -10,25 +10,22 @@ const RootGetters: GettersContract = {
    * Create a new Query instance.
    */
   query (this: Store<any>, _state: RootState) {
-    const database = this.$db()
-    return (entity: string): Query => new Query(database, entity)
+    return (entity: string): Query => new Query(this, entity)
   },
 
   /**
    * Get all data of given entity.
    */
   all (this: Store<any>, _state: RootState) {
-    const database = this.$db()
-    return (entity: string): Collection => (new Query(database, entity)).all()
+    return (entity: string): Collection => (new Query(this, entity)).all()
   },
 
   /**
    * Find a data of the given entity by given id.
    */
   find (this: Store<any>, _state: RootState) {
-    const database = this.$db()
     return (entity: string, id: string | number | Array<any>): Item => {
-      return (new Query(database, entity)).find(id)
+      return (new Query(this, entity)).find(id)
     }
   },
 
@@ -36,9 +33,8 @@ const RootGetters: GettersContract = {
    * Find a data of the given entity by given id.
    */
   findIn (this: Store<any>, _state: RootState) {
-    const database = this.$db()
     return (entity: string, idList: Array<string | number | Array<any>>): Item[] => {
-      return (new Query(database, entity)).findIn(idList)
+      return (new Query(this, entity)).findIn(idList)
     }
   }
 }

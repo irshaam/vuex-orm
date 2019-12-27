@@ -1,0 +1,49 @@
+import { Store } from 'vuex'
+import Record from '../data/Record'
+import RootState from '../modules/contracts/RootState'
+import State from '../modules/contracts/State'
+
+export default class Connection {
+  /**
+   * The store instance.
+   */
+  store: Store<any>
+
+  /**
+   * The connection name.
+   */
+  connection: string
+
+  /**
+   * The entity name.
+   */
+  entity: string
+
+  /**
+   * The root state.
+   */
+  rootState: RootState
+
+  /**
+   * The entity state.
+   */
+  state: State
+
+  /**
+   * Create a new connection instance.
+   */
+  constructor (store: Store<any>, connection: string, entity: string) {
+    this.store = store
+    this.connection = connection
+    this.entity = entity
+    this.rootState = this.store.state[connection]
+    this.state = this.rootState[entity]
+  }
+
+  /**
+   * Insert a new record.
+   */
+  insert (record: Record): void {
+    this.state.data = { ...this.state.data, [record.$id]: record }
+  }
+}

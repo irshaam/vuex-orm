@@ -1,4 +1,5 @@
 import { Store } from 'vuex'
+import Connection from '../connections/Connection'
 import Query from '../query/Query'
 import OptionsBuilder from './support/OptionsBuilder'
 import RootState from './contracts/RootState'
@@ -16,7 +17,7 @@ function destroy (this: Store<any>, _state: RootState, payload: Payloads.Delete)
 
   const result = payload.result
 
-  result.data = (new Query(this.$db(), entity)).delete(where as any)
+  result.data = (new Query(this, entity)).delete(where as any)
 }
 
 /**
@@ -24,12 +25,12 @@ function destroy (this: Store<any>, _state: RootState, payload: Payloads.Delete)
  */
 function deleteAll (this: Store<any>, _state: RootState, payload?: Payloads.DeleteAll): void {
   if (payload && payload.entity) {
-    (new Query(this.$db(), payload.entity)).deleteAll()
+    (new Query(this, payload.entity)).deleteAll()
 
     return
   }
 
-  Query.deleteAll(this.$db())
+  Query.deleteAll(this)
 }
 
 const RootMutations: MutationsContract = {
@@ -41,15 +42,10 @@ const RootMutations: MutationsContract = {
     payload.callback(state[payload.entity])
   },
 
-  /**
-   * Create new data with all fields filled by default values.
-   */
-  new (this: Store<any>, _state: RootState, payload: Payloads.New): void {
-    const entity = payload.entity
+  insertRecord (this: Store<any>, state: RootState, payload: any): void {
+    const { entity, data } = payload
 
-    const result = payload.result
-
-    result.data = (new Query(this.$db(), entity)).new()
+    ;(new Connection(this, state.$name, entity)).insert(data)
   },
 
   /**
@@ -64,7 +60,7 @@ const RootMutations: MutationsContract = {
 
     const result = payload.result
 
-    result.data = (new Query(this.$db(), entity)).create(data, options)
+    result.data = (new Query(this, entity)).create(data, options)
   },
 
   /**
@@ -79,7 +75,7 @@ const RootMutations: MutationsContract = {
 
     const result = payload.result
 
-    result.data = (new Query(this.$db(), entity)).insert(data, options)
+    result.data = (new Query(this, entity)).insert(data, options)
   },
 
   /**
@@ -93,7 +89,7 @@ const RootMutations: MutationsContract = {
 
     const result = payload.result
 
-    result.data = (new Query(this.$db(), entity)).update(data, where, options)
+    result.data = (new Query(this, entity)).update(data, where, options)
   },
 
   /**
@@ -108,7 +104,7 @@ const RootMutations: MutationsContract = {
 
     const result = payload.result
 
-    result.data = (new Query(this.$db(), entity)).insertOrUpdate(data, options)
+    result.data = (new Query(this, entity)).insertOrUpdate(data, options)
   },
 
   delete: destroy,
