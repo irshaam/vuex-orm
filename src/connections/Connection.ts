@@ -1,5 +1,6 @@
 import { Store } from 'vuex'
 import Record from '../data/Record'
+import Records from '../data/Records'
 import RootState from '../modules/contracts/RootState'
 import State from '../modules/contracts/State'
 
@@ -41,9 +42,28 @@ export default class Connection {
   }
 
   /**
-   * Insert a new record.
+   * Insert the given record.
    */
   insert (record: Record): void {
     this.state.data = { ...this.state.data, [record.$id]: record }
+  }
+
+  /**
+   * Insert the given records.
+   */
+  insertRecords (records: Records): void {
+    this.state.data = { ...this.state.data, ...records }
+  }
+
+  delete (id: string[]): void {
+    const data: Records = {}
+
+    for (const i in this.state.data) {
+      if (!id.includes(i)) {
+        data[i] = this.state.data[i]
+      }
+    }
+
+    this.state.data = data
   }
 }

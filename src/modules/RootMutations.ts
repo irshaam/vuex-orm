@@ -11,13 +11,10 @@ import * as Payloads from './payloads/RootMutations'
  * `delete`, but named `destroy` here because `delete` can't be declared at
  * this scope level.
  */
-function destroy (this: Store<any>, _state: RootState, payload: Payloads.Delete): void {
-  const entity = payload.entity
-  const where = payload.where
+function destroy (this: Store<any>, state: RootState, payload: any): void {
+  const { entity, id } = payload
 
-  const result = payload.result
-
-  result.data = (new Query(this, entity)).delete(where as any)
+  ;(new Connection(this, state.$name, entity)).delete(id)
 }
 
 /**
@@ -42,12 +39,6 @@ const RootMutations: MutationsContract = {
     payload.callback(state[payload.entity])
   },
 
-  insertRecord (this: Store<any>, state: RootState, payload: any): void {
-    const { entity, data } = payload
-
-    ;(new Connection(this, state.$name, entity)).insert(data)
-  },
-
   /**
    * Save given data to the store by replacing all existing records in the
    * store. If you want to save data without replacing existing records,
@@ -63,19 +54,16 @@ const RootMutations: MutationsContract = {
     result.data = (new Query(this, entity)).create(data, options)
   },
 
-  /**
-   * Insert given data to the state. Unlike `create`, this method will not
-   * remove existing data within the state, but it will update the data
-   * with the same primary key.
-   */
-  insert (this: Store<any>, _state: RootState, payload: Payloads.Insert): void {
-    const entity = payload.entity
-    const data = payload.data
-    const options = OptionsBuilder.createPersistOptions(payload)
+  insert (this: Store<any>, state: RootState, payload: any): void {
+    const { entity, record } = payload
 
-    const result = payload.result
+    ;(new Connection(this, state.$name, entity)).insert(record)
+  },
 
-    result.data = (new Query(this, entity)).insert(data, options)
+  insertRecords (this: Store<any>, state: RootState, payload: any): void {
+    const { entity, records } = payload
+
+    ;(new Connection(this, state.$name, entity)).insertRecords(records)
   },
 
   /**

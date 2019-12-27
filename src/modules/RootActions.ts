@@ -6,6 +6,7 @@ import Model from '../model/Model'
 import Query from '../query/Query'
 import ActionsContract from './contracts/RootActions'
 import ActionContext from './contracts/RootActionContext'
+import OptionsBuilder from './support/OptionsBuilder'
 import * as Payloads from './payloads/RootActions'
 import Result from './contracts/Result'
 
@@ -14,14 +15,12 @@ import Result from './contracts/Result'
  * but named `destroy` here because `delete` can't be declared at this
  * scope level.
  */
-async function destroy (context: ActionContext, payload: Payloads.DeleteById): Promise<Item>
-async function destroy (context: ActionContext, payload: Payloads.DeleteByCondition): Promise<Collection>
-async function destroy (context: ActionContext, payload: any): Promise<any> {
-  const result: Result = { data: {} }
+async function destroy (this: Store<any>, _context: ActionContext, payload: Payloads.DeleteById): Promise<Item>
+async function destroy (this: Store<any>, _context: ActionContext, payload: Payloads.DeleteByCondition): Promise<Collection>
+async function destroy (this: Store<any>, _context: ActionContext, payload: any): Promise<any> {
+  const { entity, where } = payload
 
-  context.commit('delete', { ...payload, result })
-
-  return result.data
+  return (new Query(this, entity)).delete(where)
 }
 
 /**
@@ -63,12 +62,12 @@ const RootActions: ActionsContract = {
    * remove existing data within the state, but it will update the data
    * with the same primary key.
    */
-  async insert (context: ActionContext, payload: Payloads.Insert): Promise<Collections> {
-    const result: Result = { data: {} }
+  async insert (this: Store<any>, _context: ActionContext, payload: Payloads.Insert): Promise<Collections> {
+    const entity = payload.entity
+    const data = payload.data
+    const options = OptionsBuilder.createPersistOptions(payload)
 
-    context.commit('insert', { ...payload, result })
-
-    return result.data
+    return (new Query(this, entity)).insert(data, options)
   },
 
   /**

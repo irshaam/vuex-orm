@@ -2,6 +2,8 @@ import Predicate from './Predicate'
 import RelationshipConstraint from './RelationshipConstraint'
 import GlobalHook from './GlobalHook'
 import GlobalHooks from './GlobalHooks'
+import SelectHook from './SelectHook'
+import MutationHook from './MutationHook'
 import RetrieveHook from './RetrieveHook'
 import BeforeCreateHook from './BeforeCreateHook'
 import AfterCreateHook from './AfterCreateHook'
@@ -16,6 +18,8 @@ export {
   RelationshipConstraint,
   GlobalHook,
   GlobalHooks,
+  SelectHook,
+  MutationHook,
   RetrieveHook,
   BeforeCreateHook,
   AfterCreateHook,
