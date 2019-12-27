@@ -55,6 +55,9 @@ export default class Connection {
     this.state.data = { ...this.state.data, ...records }
   }
 
+  /**
+   * Delete records that matches the given id.
+   */
   delete (id: string[]): void {
     const data: Records = {}
 

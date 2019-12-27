@@ -590,25 +590,25 @@ export default class Query<T extends Model = Model> {
     let records = this.records()
 
     // Process `beforeSelect` hook.
-    records = this.executeRetrieveHook('beforeSelect', records)
+    records = this.executeSelectHook('beforeSelect', records)
 
     // Let's filter the records at first by the where clauses.
     records = this.filterWhere(records)
 
     // Process `afterWhere` hook.
-    records = this.executeRetrieveHook('afterWhere', records)
+    records = this.executeSelectHook('afterWhere', records)
 
     // Next, lets sort the data.
     records = this.filterOrderBy(records)
 
     // Process `afterOrderBy` hook.
-    records = this.executeRetrieveHook('afterOrderBy', records)
+    records = this.executeSelectHook('afterOrderBy', records)
 
     // Finally, slice the record by limit and offset.
     records = this.filterLimit(records)
 
     // Process `afterLimit` hook.
-    records = this.executeRetrieveHook('afterLimit', records)
+    records = this.executeSelectHook('afterLimit', records)
 
     return records
   }
@@ -906,21 +906,21 @@ export default class Query<T extends Model = Model> {
   private commitUpdate (models: Data.Instances<T>): Data.Collection<T> {
     models = this.updateIndexes(models)
 
-    const beforeHooks = this.buildHooks('beforeUpdate') as Contracts.BeforeUpdateHook[]
-    const afterHooks = this.buildHooks('afterUpdate') as Contracts.AfterUpdateHook[]
+    const beforeHooks = this.buildHooks('beforeUpdate') as Contracts.MutationHook[]
+    const afterHooks = this.buildHooks('afterUpdate') as Contracts.MutationHook[]
 
     const updated: Data.Collection<T> = []
 
     for (const id in models) {
       const model = models[id]
 
-      if (beforeHooks.some(hook => hook(model as any, this.entity) === false)) {
+      if (beforeHooks.some(hook => hook(model, null, this.entity) === false)) {
         continue
       }
 
       this.state.data = { ...this.state.data, [id]: model.$getAttributes() }
 
-      afterHooks.forEach(hook => { hook(model as any, this.entity) })
+      afterHooks.forEach(hook => { hook(model, null, this.entity) })
 
       updated.push(model)
     }
@@ -1276,6 +1276,16 @@ export default class Query<T extends Model = Model> {
   }
 
   /**
+   * Get global hook of the given name as array by stripping id key and keep
+   * only hook functions.
+   */
+  private getGlobalHookAsArray (on: string): Contracts.HookableClosure[] {
+    const hooks = this.self().hooks[on]
+
+    return hooks ? hooks.map(h => h.callback.bind(this)) : []
+  }
+
+  /**
    * Execute mutation hooks to the given collection.
    */
   private executeMutationHooks (on: string, collection: T[]): T[] {
@@ -1291,24 +1301,13 @@ export default class Query<T extends Model = Model> {
   }
 
   /**
-   * Get global hook of the given name as array by stripping id key and keep
-   * only hook functions.
-   */
-  private getGlobalHookAsArray (on: string): Contracts.HookableClosure[] {
-    const hooks = this.self().hooks[on]
-
-    return hooks ? hooks.map(h => h.callback.bind(this)) : []
-  }
-
-  /**
    * Execute retrieve hook for the given method.
    */
-  private executeRetrieveHook (on: string, models: Data.Collection<T>): Data.Collection<T> {
+  private executeSelectHook (on: string, models: Data.Collection<T>): Data.Collection<T> {
     const hooks = this.buildHooks(on) as Contracts.SelectHook[]
 
-    return hooks.reduce((collection, hook) => {
+    return hooks.reduce<Data.Collection<T>>((collection, hook) => {
       collection = hook(models as any, this.entity) as any
-
       return collection
     }, models)
   }
