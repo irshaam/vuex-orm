@@ -189,9 +189,24 @@ export default class Database {
   private createBindingModel (model: typeof Model): typeof Model {
     const database = this
 
-    const c = class extends model {
-      static store (): Store<any> {
-        return database.store
+    let c: typeof Model
+
+    // When utilising code targeted at ES5 mixed with code targeted at ES6
+    // causes a runtime error when using mixin classes.
+    // Nuxt.js is a good example edge-case.
+    try {
+      c = Function('model', 'database', `
+      return class extends model {
+        static store () {
+          return database.store
+        }
+      }
+    `)(model, database) as typeof Model
+    } catch {
+      c = class extends model {
+        static store (): Store<any> {
+          return database.store
+        }
       }
     }
 
