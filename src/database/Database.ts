@@ -203,6 +203,7 @@ export default class Database {
       }
     `)(model, database) as typeof Model
     } catch {
+      /* istanbul ignore next */
       c = class extends model {
         static store (): Store<any> {
           return database.store
