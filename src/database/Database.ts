@@ -193,10 +193,10 @@ export default class Database {
   private createBindingModel (model: typeof Model): typeof Model {
     const database = this
 
-    let c: typeof Model
+    let proxy: typeof Model
 
     try {
-      c = new Function('model', 'database', `
+      proxy = new Function('model', 'database', `
         'use strict';
         return class extends model {
           static store () {
@@ -206,16 +206,16 @@ export default class Database {
       `)(model, database) as typeof Model
     } catch {
       /* istanbul ignore next */
-      c = class extends model {
+      proxy = class extends model {
         static store (): Store<any> {
           return database.store
         }
       }
     }
 
-    Object.defineProperty(c, 'name', { get: () => model.name })
+    Object.defineProperty(proxy, 'name', { get: () => model.name })
 
-    return c
+    return proxy
   }
 
   /**
