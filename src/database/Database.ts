@@ -185,23 +185,25 @@ export default class Database {
 
   /**
    * Create a new model that binds the database.
+   *
+   * When utilising code targeted at ES5 mixed with code targeted at ES6
+   * causes a runtime error when using mixin classes. Implemented workaround
+   * until babel releases fix (https://github.com/babel/babel/issues/9367).
    */
   private createBindingModel (model: typeof Model): typeof Model {
     const database = this
 
     let c: typeof Model
 
-    // When utilising code targeted at ES5 mixed with code targeted at ES6
-    // causes a runtime error when using mixin classes.
-    // Nuxt.js is a good example edge-case.
     try {
-      c = Function('model', 'database', `
-      return class extends model {
-        static store () {
-          return database.store
+      c = new Function('model', 'database', `
+        'use strict';
+        return class extends model {
+          static store () {
+            return database.store
+          }
         }
-      }
-    `)(model, database) as typeof Model
+      `)(model, database) as typeof Model
     } catch {
       /* istanbul ignore next */
       c = class extends model {
